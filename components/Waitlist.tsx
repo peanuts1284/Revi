@@ -71,7 +71,10 @@ export default function Waitlist() {
                     You&apos;re on the list ✦
                   </p>
                   <p className="mt-1.5 text-[13px] text-sage/60">
-                    Check your email to confirm your spot.
+                    We&apos;ll reach out personally when your spot is ready.
+                  </p>
+                  <p className="mt-1 text-[12px] text-sage/40">
+                    Keep an eye on your inbox.
                   </p>
                 </div>
               </div>
