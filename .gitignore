@@ -17,3 +17,4 @@ waitlist-signups.txt
 .DS_Store
 *.pem
 npm-debug.log*
+.vercel
