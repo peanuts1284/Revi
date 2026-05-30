@@ -31,20 +31,12 @@ export default function Navbar() {
           </span>
         </a>
 
-        <div className="flex items-center gap-3">
-          <a
-            href="#"
-            className="px-3 py-1.5 text-[13px] text-sage/80 transition-colors duration-150 hover:text-cream"
-          >
-            Sign in
-          </a>
-          <a
-            href="#waitlist"
-            className="rounded border border-gold/45 px-4 py-1.5 text-[13px] font-medium text-gold transition-all duration-150 hover:scale-[1.02] hover:border-gold hover:bg-gold hover:text-bg active:scale-100"
-          >
-            Join waitlist
-          </a>
-        </div>
+        <a
+          href="#waitlist"
+          className="rounded border border-gold/45 px-4 py-1.5 text-[13px] font-medium text-gold transition-all duration-150 hover:scale-[1.02] hover:border-gold hover:bg-gold hover:text-bg active:scale-100"
+        >
+          Join waitlist
+        </a>
       </div>
     </header>
   );
