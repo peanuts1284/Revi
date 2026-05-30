@@ -1,0 +1,91 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Defined at top level — outside any @layer — so all animation references can find it */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background: #0d1f1a;
+    color: #f0ede6;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  ::selection {
+    background: rgba(201, 168, 76, 0.18);
+    color: #f0ede6;
+  }
+
+  ::-webkit-scrollbar        { width: 5px; }
+  ::-webkit-scrollbar-track  { background: #0d1f1a; }
+  ::-webkit-scrollbar-thumb  { background: #1e3d32; border-radius: 999px; }
+  ::-webkit-scrollbar-thumb:hover { background: #2a5244; }
+}
+
+@layer components {
+  /* Legal page body content */
+  .prose-legal {
+    @apply text-[15px] leading-[1.8] text-sage;
+  }
+  .prose-legal p {
+    @apply mb-0;
+  }
+  .prose-legal strong {
+    @apply font-medium text-cream;
+  }
+  .prose-legal ul {
+    @apply mt-3 space-y-2 pl-4;
+  }
+  .prose-legal ul li {
+    @apply relative pl-4 text-[14px] text-sage;
+  }
+  .prose-legal ul li::before {
+    content: "◆";
+    @apply absolute left-0 text-[7px] text-gold;
+    top: 7px;
+  }
+  .prose-legal a {
+    @apply text-gold underline-offset-2 transition-colors duration-150 hover:text-gold-light;
+  }
+}
+
+@layer utilities {
+  .cursor-blink { animation: blink 0.75s step-end infinite; }
+
+  /* Hero load-time entrance — fill:both holds the from-keyframe during delay */
+  .hero-in   { animation: fade-up 0.65s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  .hero-in-1 { animation: fade-up 0.65s 0.09s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  .hero-in-2 { animation: fade-up 0.65s 0.18s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  .hero-in-3 { animation: fade-up 0.65s 0.27s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+  /* When OS reduces motion, skip the animation and immediately show content */
+  @media (prefers-reduced-motion: reduce) {
+    .hero-in,
+    .hero-in-1,
+    .hero-in-2,
+    .hero-in-3 {
+      animation: none;
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
