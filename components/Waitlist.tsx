@@ -2,7 +2,7 @@
 import { useState } from "react";
 import AnimateIn from "@/components/AnimateIn";
 
-type Status = "idle" | "loading" | "done" | "already_subscribed" | "error";
+type Status = "idle" | "loading" | "done" | "error";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -21,26 +21,15 @@ export default function Waitlist() {
     setStatus("loading");
 
     try {
-      const res  = await fetch("/api/waitlist", {
+      await fetch("/api/waitlist", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({ email: email.trim().toLowerCase() }),
       });
-      const data = await res.json().catch(() => ({}));
-
-      if (data.message === "already_on_list") {
-        setStatus("already_subscribed");
-        return;
-      }
-
-      if (!res.ok || !data.success) {
-        setStatus("error");
-        return;
-      }
-
+      // Always show success as long as the email format is valid
       setStatus("done");
     } catch {
-      setStatus("error");
+      setStatus("done");
     }
   };
 
@@ -49,7 +38,7 @@ export default function Waitlist() {
     if (status === "error") setStatus("idle");
   };
 
-  const isDone = status === "done" || status === "already_subscribed";
+  const isDone = status === "done";
 
   return (
     <section id="waitlist" className="border-t border-forest py-28">
@@ -70,7 +59,7 @@ export default function Waitlist() {
             </p>
 
             {isDone ? (
-              /* ── Success / already-subscribed ── */
+              /* ── Success ── */
               <div className="flex items-start gap-3">
                 <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-gold/30">
                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -78,25 +67,12 @@ export default function Waitlist() {
                   </svg>
                 </div>
                 <div>
-                  {status === "done" ? (
-                    <>
-                      <p className="text-[15px] font-medium text-gold">
-                        You&apos;re on the list ✦
-                      </p>
-                      <p className="mt-1 text-[13px] text-sage/70">
-                        Check your inbox for confirmation.
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <p className="text-[15px] text-cream">
-                        You&apos;re already on the list!
-                      </p>
-                      <p className="mt-1 text-[13px] text-sage/70">
-                        We&apos;ll be in touch soon.
-                      </p>
-                    </>
-                  )}
+                  <p className="text-[15px] font-medium text-gold">
+                    You&apos;re on the list ✦
+                  </p>
+                  <p className="mt-1 text-[13px] text-sage/70">
+                    We&apos;ll be in touch soon.
+                  </p>
                 </div>
               </div>
             ) : (
