@@ -15,13 +15,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, message: "invalid_email" }, { status: 400 });
     }
 
-    // Duplicate check
-    const exists = await airtableEmailExists(email);
-    if (exists) {
-      console.log(`[waitlist] duplicate: ${email}`);
-      return NextResponse.json({ success: false, message: "already_on_list" }, { status: 409 });
-    }
-
     // Save to Airtable and notify owner concurrently
     const date = timestamp.slice(0, 10); // YYYY-MM-DD
     await Promise.allSettled([
@@ -41,52 +34,25 @@ export async function POST(req: NextRequest) {
 // ---------------------------------------------------------------------------
 // Airtable helpers
 // ---------------------------------------------------------------------------
-function airtableUrl(path = "") {
+async function airtableInsert(email: string, date: string) {
+  const key   = process.env.AIRTABLE_API_KEY;
   const base  = process.env.AIRTABLE_BASE_ID;
   const table = process.env.AIRTABLE_TABLE_NAME ?? "Signups";
-  return `https://api.airtable.com/v0/${base}/${encodeURIComponent(table)}${path}`;
-}
 
-function airtableHeaders() {
-  return {
-    Authorization:  `Bearer ${process.env.AIRTABLE_API_KEY}`,
-    "Content-Type": "application/json",
-  };
-}
-
-async function airtableEmailExists(email: string): Promise<boolean> {
-  const key = process.env.AIRTABLE_API_KEY;
-  const base = process.env.AIRTABLE_BASE_ID;
-  if (!key || !base) return false;
-
-  // filterByFormula searches existing records for this exact email
-  const formula = encodeURIComponent(`{Email}="${email}"`);
-  const res = await fetch(`${airtableUrl()}?filterByFormula=${formula}&maxRecords=1`, {
-    headers: airtableHeaders(),
-  });
-
-  if (!res.ok) {
-    console.error("[waitlist] airtable lookup failed:", res.status, await res.text());
-    return false;
-  }
-
-  const data = await res.json() as { records: unknown[] };
-  return data.records.length > 0;
-}
-
-async function airtableInsert(email: string, date: string) {
-  const key  = process.env.AIRTABLE_API_KEY;
-  const base = process.env.AIRTABLE_BASE_ID;
   if (!key || !base) {
     console.warn("[waitlist] airtable skipped — env vars not set");
     return;
   }
 
-  const res = await fetch(airtableUrl(), {
+  const url = `https://api.airtable.com/v0/${base}/${encodeURIComponent(table)}`;
+  const res = await fetch(url, {
     method:  "POST",
-    headers: airtableHeaders(),
+    headers: {
+      Authorization:  `Bearer ${key}`,
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify({
-      records: [{ fields: { Email: email, Date: date, Source: SOURCE } }],
+      records: [{ fields: { Email: email, Date: date } }],
     }),
   });
 
