@@ -2,7 +2,7 @@
 import { useState } from "react";
 import AnimateIn from "@/components/AnimateIn";
 
-type Status = "idle" | "loading" | "done" | "error";
+type Status = "idle" | "loading" | "done" | "already_on_list" | "error";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -21,12 +21,18 @@ export default function Waitlist() {
     setStatus("loading");
 
     try {
-      await fetch("/api/waitlist", {
+      const res  = await fetch("/api/waitlist", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({ email: email.trim().toLowerCase() }),
       });
-      // Always show success as long as the email format is valid
+      const data = await res.json().catch(() => ({}));
+
+      if (data.message === "already_on_list") {
+        setStatus("already_on_list");
+        return;
+      }
+
       setStatus("done");
     } catch {
       setStatus("done");
@@ -38,7 +44,7 @@ export default function Waitlist() {
     if (status === "error") setStatus("idle");
   };
 
-  const isDone = status === "done";
+  const isDone = status === "done" || status === "already_on_list";
 
   return (
     <section id="waitlist" className="border-t border-forest py-28">
@@ -67,15 +73,28 @@ export default function Waitlist() {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-[20px] font-bold text-gold leading-snug">
-                    You&apos;re on the list ✦
-                  </p>
-                  <p className="mt-1.5 text-[13px] text-sage/60">
-                    We&apos;ll reach out personally when your spot is ready.
-                  </p>
-                  <p className="mt-1 text-[12px] text-sage/40">
-                    Keep an eye on your inbox.
-                  </p>
+                  {status === "already_on_list" ? (
+                    <>
+                      <p className="text-[20px] font-bold text-cream leading-snug">
+                        You&apos;re already on the waitlist! ✦
+                      </p>
+                      <p className="mt-1.5 text-[13px] text-sage/60">
+                        We&apos;ll be in touch soon.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-[20px] font-bold text-gold leading-snug">
+                        You&apos;re on the list ✦
+                      </p>
+                      <p className="mt-1.5 text-[13px] text-sage/60">
+                        We&apos;ll reach out personally when your spot is ready.
+                      </p>
+                      <p className="mt-1 text-[12px] text-sage/40">
+                        Keep an eye on your inbox.
+                      </p>
+                    </>
+                  )}
                 </div>
               </div>
             ) : (

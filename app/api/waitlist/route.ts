@@ -15,6 +15,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, message: "invalid_email" }, { status: 400 });
     }
 
+    // Duplicate check
+    const exists = await airtableEmailExists(email);
+    if (exists) {
+      console.log(`[waitlist] duplicate: ${email}`);
+      return NextResponse.json({ success: false, message: "already_on_list" }, { status: 409 });
+    }
+
     // Save to Airtable and notify owner concurrently
     const date = timestamp.slice(0, 10); // YYYY-MM-DD
     await Promise.allSettled([
@@ -34,6 +41,34 @@ export async function POST(req: NextRequest) {
 // ---------------------------------------------------------------------------
 // Airtable helpers
 // ---------------------------------------------------------------------------
+async function airtableEmailExists(email: string): Promise<boolean> {
+  const key   = process.env.AIRTABLE_API_KEY;
+  const base  = process.env.AIRTABLE_BASE_ID;
+  const table = process.env.AIRTABLE_TABLE_NAME ?? "Signups";
+
+  if (!key || !base) return false;
+
+  const formula = encodeURIComponent(`{Email}="${email}"`);
+  const url = `https://api.airtable.com/v0/${base}/${encodeURIComponent(table)}?filterByFormula=${formula}&maxRecords=1`;
+
+  try {
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${key}` },
+    });
+
+    if (!res.ok) {
+      console.error("[waitlist] airtable lookup failed:", res.status, await res.text());
+      return false;
+    }
+
+    const data = await res.json() as { records: unknown[] };
+    return data.records.length > 0;
+  } catch (err) {
+    console.error("[waitlist] airtable lookup exception:", err);
+    return false;
+  }
+}
+
 async function airtableInsert(email: string, date: string) {
   const key   = process.env.AIRTABLE_API_KEY;
   const base  = process.env.AIRTABLE_BASE_ID;
